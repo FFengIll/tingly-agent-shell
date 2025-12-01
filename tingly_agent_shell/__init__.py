@@ -15,15 +15,17 @@ from typing import Any, Dict, List, Optional, Union
 @dataclass
 class ShellConfig:
     """Configuration for shell initialization."""
+
     shell_type: str = "bash"
     environment: Dict[str, str] = field(default_factory=dict)
-    setup_rc: List[str] = field(default_factory=list)
+    pre_scripts: List[str] = field(default_factory=list)
     workdir: Optional[str] = None
 
 
 @dataclass
 class ExecuteResult:
     """Result of a command execution."""
+
     command: str
     returncode: int
     stdout: str
@@ -67,23 +69,40 @@ class Shell:
             self._env.update(self.config.environment)
 
         # Run setup RC scripts
-        self._run_setup_rc()
+        self._run_pre_scripts()
 
-    def _run_setup_rc(self) -> None:
+    def _run_pre_scripts(self) -> None:
         """
         Run setup RC scripts/commands to initialize the shell.
         This runs synchronously during shell initialization.
-        We parse commands to extract environment changes rather than executing them,
-        because subprocesses are isolated and won't persist environment changes.
+
+        Each pre_script is executed in a subprocess for side effects (file creation,
+        package installation, etc.), and any export commands are parsed to update
+        the parent shell's environment.
         """
-        # Parse setup commands to extract environment variables
-        for cmd in self.config.setup_rc:
+        import subprocess
+
+        # Run each pre_script sequentially to allow variable expansion between scripts
+        for cmd in self.config.pre_scripts:
             try:
-                # Parse export commands from setup
-                exported_vars = self._parse_export_command(cmd)
-                self._env.update(exported_vars)
+                # Execute the command in a subprocess for side effects
+                result = subprocess.run(
+                    cmd,
+                    shell=True,
+                    env=self._env,
+                    cwd=self.config.workdir,
+                    capture_output=True,
+                    text=True,
+                )
+
+                # Parse export commands from the script and update environment
+                # This ensures environment variables are tracked even though
+                # subprocess exports don't persist to the parent
+                if result.returncode == 0:
+                    exported_vars = self._parse_export_command(cmd)
+                    self._env.update(exported_vars)
             except Exception:
-                # If setup fails, silently continue
+                # If a setup script fails, silently continue with the next one
                 pass
 
     def _parse_export_command(self, command: str) -> Dict[str, str]:
@@ -105,7 +124,7 @@ class Shell:
         patterns = [
             r'export\s+(\w+)="([^"]*)"',  # export VAR="value"
             r"export\s+(\w+)='([^']*)'",  # export VAR='value'
-            r'export\s+(\w+)=([^\s]+?)(?:\s+|$)',   # export VAR=value (no spaces) - non-greedy
+            r"export\s+(\w+)=([^\s]+?)(?:\s+|$)",  # export VAR=value (no spaces) - non-greedy
         ]
 
         for pattern in patterns:
@@ -139,7 +158,7 @@ class Shell:
             return self._env.get(var_name, match.group(0))
 
         # Match both ${VAR} and $VAR
-        pattern = r'\$\{?(\w+)\}?'
+        pattern = r"\$\{?(\w+)\}?"
         expanded = re.sub(pattern, replace_var, value)
 
         return expanded
@@ -191,8 +210,8 @@ class Shell:
                 output = stdout.decode("utf-8")
                 # Parse command output (KEY=VALUE per line)
                 for line in output.splitlines():
-                    if '=' in line:
-                        key, value = line.split('=', 1)
+                    if "=" in line:
+                        key, value = line.split("=", 1)
                         # Only update if the value is different
                         if self._env.get(key) != value:
                             self._env[key] = value
@@ -252,6 +271,7 @@ class Shell:
 
         # Record start time
         import time
+
         start_time = time.time()
 
         try:
@@ -314,9 +334,7 @@ class Shell:
             raise
         except Exception as e:
             execution_time = time.time() - start_time
-            raise RuntimeError(
-                f"Failed to execute command '{command}': {e}"
-            ) from e
+            raise RuntimeError(f"Failed to execute command '{command}': {e}") from e
 
     def fork(self, config: Optional[ShellConfig] = None) -> "Shell":
         """
@@ -346,7 +364,7 @@ class Shell:
             config = ShellConfig(
                 shell_type=self.config.shell_type,
                 environment=self._env.copy(),
-                setup_rc=self.config.setup_rc.copy(),
+                pre_scripts=self.config.pre_scripts.copy(),
                 workdir=self.config.workdir,
             )
 
@@ -466,10 +484,11 @@ class Shell:
 
 # Convenience functions for quick usage
 
+
 async def create_shell(
     shell_type: str = "bash",
     environment: Optional[Dict[str, str]] = None,
-    setup_rc: Optional[List[str]] = None,
+    pre_scripts: Optional[List[str]] = None,
     workdir: Optional[str] = None,
 ) -> Shell:
     """
@@ -487,7 +506,7 @@ async def create_shell(
     config = ShellConfig(
         shell_type=shell_type,
         environment=environment or {},
-        setup_rc=setup_rc or [],
+        pre_scripts=pre_scripts or [],
         workdir=workdir,
     )
     return Shell(config=config)

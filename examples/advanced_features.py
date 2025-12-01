@@ -4,6 +4,7 @@ Advanced examples demonstrating environment variable tracking and setup_rc
 """
 
 import asyncio
+
 from tingly_agent_shell import create_shell
 
 
@@ -26,7 +27,7 @@ async def example_env_tracking():
     # Set PATH with variable expansion
     print("\n3. Modifying PATH...")
     await shell.execute("export PATH='/custom/bin:$PATH'")
-    path = shell.getenv('PATH')
+    path = shell.getenv("PATH")
     print(f"   PATH starts with: {path[:50]}...")
 
     shell.close()
@@ -39,11 +40,11 @@ async def example_setup_rc_multiple():
 
     # Create shell with multiple setup commands
     shell = await create_shell(
-        setup_rc=[
+        pre_scripts=[
             "export BASE_DIR='/tmp/myapp'",
             "export CONFIG_FILE='$BASE_DIR/config.yaml'",
             "export DATA_DIR='$BASE_DIR/data'",
-            "export LOG_FILE='$DATA_DIR/app.log'"
+            "export LOG_FILE='$DATA_DIR/app.log'",
         ]
     )
 
@@ -99,18 +100,18 @@ async def example_complex_setup():
 
     # Simulate a development environment setup
     shell = await create_shell(
-        setup_rc=[
+        pre_scripts=[
             "export ENV='development'",
             "export DEBUG='true'",
             "export LOG_LEVEL='debug'",
             "export DB_HOST='localhost'",
             "export DB_PORT='5432'",
-            "export DB_NAME='myapp_dev'"
+            "export DB_NAME='myapp_dev'",
         ]
     )
 
     print("Development environment configured:")
-    for key in ['ENV', 'DEBUG', 'LOG_LEVEL', 'DB_HOST', 'DB_PORT', 'DB_NAME']:
+    for key in ["ENV", "DEBUG", "LOG_LEVEL", "DB_HOST", "DB_PORT", "DB_NAME"]:
         print(f"  {key}={shell.getenv(key)}")
 
     # Fork production environment
@@ -124,11 +125,11 @@ async def example_complex_setup():
     await prod.execute("export DB_HOST='prod.db.example.com'")
 
     print("Production environment:")
-    for key in ['ENV', 'DEBUG', 'LOG_LEVEL', 'DB_HOST', 'DB_PORT', 'DB_NAME']:
+    for key in ["ENV", "DEBUG", "LOG_LEVEL", "DB_HOST", "DB_PORT", "DB_NAME"]:
         print(f"  {key}={prod.getenv(key)}")
 
     print("\nDevelopment environment (unchanged):")
-    for key in ['ENV', 'DEBUG', 'LOG_LEVEL', 'DB_HOST', 'DB_PORT', 'DB_NAME']:
+    for key in ["ENV", "DEBUG", "LOG_LEVEL", "DB_HOST", "DB_PORT", "DB_NAME"]:
         print(f"  {key}={shell.getenv(key)}")
 
     shell.close()
@@ -144,18 +145,12 @@ async def example_tracking_disabled():
 
     # Execute without tracking environment
     print("1. Executing without env tracking...")
-    result = await shell.execute(
-        "export NO_TRACK='should_not_appear'",
-        sync_env=False
-    )
+    result = await shell.execute("export NO_TRACK='should_not_appear'", sync_env=False)
     print(f"   Variable tracked: {shell.getenv('NO_TRACK')}")
 
     # Execute with tracking
     print("\n2. Executing with env tracking...")
-    result = await shell.execute(
-        "export TRACKED='will_appear'",
-        sync_env=True
-    )
+    result = await shell.execute("export TRACKED='will_appear'", sync_env=True)
     print(f"   Variable tracked: {shell.getenv('TRACKED')}")
 
     shell.close()
@@ -183,6 +178,7 @@ async def main():
         except Exception as e:
             print(f"Error in {example.__name__}: {e}")
             import traceback
+
             traceback.print_exc()
 
     print("=" * 60)
