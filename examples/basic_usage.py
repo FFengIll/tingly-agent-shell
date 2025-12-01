@@ -20,10 +20,7 @@ async def example_2_shell_with_env():
     """Example 2: Create shell with custom environment"""
     print("=== Example 2: Shell with Custom Environment ===")
     shell = await create_shell(
-        environment={
-            "MY_VAR": "my_value",
-            "APP_NAME": "TinglyAgent"
-        }
+        environment={"MY_VAR": "my_value", "APP_NAME": "TinglyAgent"}
     )
 
     result = await shell.execute("echo $MY_VAR $APP_NAME")

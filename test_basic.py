@@ -5,9 +5,13 @@ Basic test for tingly-agent-shell module
 
 import asyncio
 import sys
+
+import pytest
+
 from tingly_agent_shell import Shell, ShellConfig, create_shell, execute_command
 
 
+@pytest.mark.asyncio
 async def test_basic_execution():
     """Test basic command execution"""
     print("Testing basic execution...")
@@ -17,18 +21,19 @@ async def test_basic_execution():
     print("✓ Basic execution works")
 
 
+@pytest.mark.asyncio
 async def test_shell_creation():
     """Test shell creation"""
     print("Testing shell creation...")
     shell = await create_shell(
-        shell_type="bash",
-        environment={"TEST_VAR": "test_value"}
+        shell_type="bash", environment={"TEST_VAR": "test_value"}
     )
     assert shell.getenv("TEST_VAR") == "test_value"
     shell.close()
     print("✓ Shell creation works")
 
 
+@pytest.mark.asyncio
 async def test_environment_variables():
     """Test environment variable management"""
     print("Testing environment variables...")
@@ -47,6 +52,7 @@ async def test_environment_variables():
     print("✓ Environment variable management works")
 
 
+@pytest.mark.asyncio
 async def test_shell_forking():
     """Test shell forking with state inheritance"""
     print("Testing shell forking...")
@@ -75,6 +81,7 @@ async def test_shell_forking():
     print("✓ Shell forking works")
 
 
+@pytest.mark.asyncio
 async def test_timeout():
     """Test timeout functionality"""
     print("Testing timeout...")
@@ -89,6 +96,7 @@ async def test_timeout():
     shell.close()
 
 
+@pytest.mark.asyncio
 async def test_context_manager():
     """Test context manager"""
     print("Testing context manager...")
@@ -98,6 +106,7 @@ async def test_context_manager():
     print("✓ Context manager works")
 
 
+@pytest.mark.asyncio
 async def test_command_execution():
     """Test command execution in shell"""
     print("Testing command execution...")
@@ -113,13 +122,12 @@ async def test_command_execution():
     print("✓ Command execution works")
 
 
+@pytest.mark.asyncio
 async def test_shell_config():
     """Test shell configuration"""
     print("Testing shell configuration...")
     config = ShellConfig(
-        shell_type="bash",
-        environment={"KEY": "value"},
-        workdir="/tmp"
+        shell_type="bash", environment={"KEY": "value"}, workdir="/tmp"
     )
     shell = Shell(config=config)
 

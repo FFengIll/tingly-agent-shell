@@ -5,9 +5,12 @@ Test environment variable tracking and setup_rc features
 
 import asyncio
 
+import pytest
+
 from tingly_agent_shell import create_shell
 
 
+@pytest.mark.asyncio
 async def test_env_var_tracking():
     """Test that environment variables set via export are tracked"""
     print("Testing environment variable tracking...")
@@ -33,6 +36,7 @@ async def test_env_var_tracking():
     print("✓ Environment variable tracking works\n")
 
 
+@pytest.mark.asyncio
 async def test_setup_rc():
     """Test that setup_rc commands are executed"""
     print("Testing setup_rc...")
@@ -53,6 +57,7 @@ async def test_setup_rc():
     print("✓ setup_rc works\n")
 
 
+@pytest.mark.asyncio
 async def test_fork_inherits_env():
     """Test that forked shell inherits environment changes"""
     print("Testing fork inherits environment changes...")
@@ -90,6 +95,7 @@ async def test_fork_inherits_env():
     print("✓ Fork inherits environment changes\n")
 
 
+@pytest.mark.asyncio
 async def test_multiple_setup_commands():
     """Test multiple setup commands execute in order"""
     print("Testing multiple setup commands...")
