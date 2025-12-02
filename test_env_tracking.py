@@ -37,7 +37,7 @@ async def test_env_var_tracking():
 
 
 @pytest.mark.asyncio
-async def test_setup_rc():
+async def test_pre_scripts():
     """Test that setup_rc commands are executed"""
     print("Testing setup_rc...")
 
@@ -130,7 +130,7 @@ async def main():
 
     tests = [
         test_env_var_tracking,
-        test_setup_rc,
+        test_pre_scripts,
         test_fork_inherits_env,
         test_multiple_setup_commands,
     ]

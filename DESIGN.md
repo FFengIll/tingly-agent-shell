@@ -19,3 +19,12 @@ It is also defined as a module to make usage simple.
   - shell env state fetch
   - shell execute result fetch
   - etc.
+
+
+# Class
+- AgentShell
+  - general shell for agent
+- StateShell
+  - which will save env and pwd by shell injection, to keep current workdir and env up-to-date.
+- SessionShell
+  - which will keep the shell session alive, and ready to communicate without closing unless exit or manual close.
